@@ -7,6 +7,13 @@ const readout = document.querySelector<HTMLParagraphElement>(
 )!;
 let assignedProducers = 2;
 
+type ShiftResults = {
+  assignedProducers: number;
+  production: number;
+  consumption: number;
+  balance: number;
+};
+
 // Calculation helpers
 function calculateProduction(assignedProducers: number): number {
   return assignedProducers * 3;
@@ -23,6 +30,19 @@ function calculateBalance(
   return production - consumption;
 }
 
+function calculateShiftResults(assignedProducers: number): ShiftResults {
+  const production = calculateProduction(assignedProducers);
+  const consumption = calculateConsumption();
+  const balance = calculateBalance(production, consumption);
+
+  return {
+    assignedProducers,
+    production,
+    consumption,
+    balance,
+  };
+}
+
 function drawCrewAssignments(assignedProducers: number): void {
   for (let i = 0; i < 6; i++) {
     ctx.fillStyle = i < assignedProducers ? "#27766b" : "#c9d2c9";
@@ -34,43 +54,35 @@ function drawCrewAssignments(assignedProducers: number): void {
 }
 
 // Update HTML
-function updateAllocationReadout(
-  assignedProducers: number,
-  production: number,
-  consumption: number,
-  balance: number,
-): void {
+function updateAllocationReadout(results: ShiftResults): void {
   readout.textContent =
-    `Assigned: ${assignedProducers}/6 · Production: ${production} · Consumption: ${consumption} · Balance: ${
-      balance > 0 ? "+" : ""
-    }${balance}`;
+    `Assigned: ${results.assignedProducers}/6 · Production: ${results.production} · Consumption: ${results.consumption} · Balance: ${
+      results.balance > 0 ? "+" : ""
+    }${results.balance}`;
+}
+
+function drawAllocationCanvas(results: ShiftResults): void {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawCrewAssignments(results.assignedProducers);
+
+  ctx.fillStyle = "#233e43";
+  ctx.font = "14px system-ui";
+  ctx.fillText(`Producers: ${results.assignedProducers} / 6`, 18, 76);
+  ctx.fillText(`Production: ${results.production}`, 18, 102);
+  ctx.fillStyle = "#27766b";
+  ctx.fillRect(18, 110, results.production * 14, 20);
+  ctx.fillStyle = "#233e43";
+  ctx.fillText(`Consumption: ${results.consumption}`, 18, 154);
+  ctx.fillStyle = "#a44d23";
+  ctx.fillRect(18, 162, results.consumption * 14, 20);
 }
 
 // Main update
 function updateAllocationDisplay() {
-  const production = calculateProduction(assignedProducers);
-  const consumption = calculateConsumption();
-  const balance = calculateBalance(production, consumption);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawCrewAssignments(assignedProducers);
+  const results = calculateShiftResults(assignedProducers);
 
-  ctx.fillStyle = "#233e43";
-  ctx.font = "14px system-ui";
-  ctx.fillText(`Producers: ${assignedProducers} / 6`, 18, 76);
-  ctx.fillText(`Production: ${production}`, 18, 102);
-  ctx.fillStyle = "#27766b";
-  ctx.fillRect(18, 110, production * 14, 20);
-  ctx.fillStyle = "#233e43";
-  ctx.fillText(`Consumption: ${consumption}`, 18, 154);
-  ctx.fillStyle = "#a44d23";
-  ctx.fillRect(18, 162, consumption * 14, 20);
-
-  updateAllocationReadout(
-    assignedProducers,
-    production,
-    consumption,
-    balance,
-  );
+  drawAllocationCanvas(results);
+  updateAllocationReadout(results);
 }
 
 document.querySelector<HTMLButtonElement>("#allocation-less")!.onclick = () => {
