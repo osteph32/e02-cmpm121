@@ -14,6 +14,12 @@ type ShiftResults = {
   balance: number;
 };
 
+type DisplayRow = {
+  label: string;
+  value: number;
+  color: string;
+};
+
 // Calculation helpers
 function calculateProduction(assignedProducers: number): number {
   return assignedProducers * 3;
@@ -43,6 +49,21 @@ function calculateShiftResults(assignedProducers: number): ShiftResults {
   };
 }
 
+function createDisplayRows(results: ShiftResults): DisplayRow[] {
+  return [
+    {
+      label: "Production",
+      value: results.production,
+      color: "#27766b",
+    },
+    {
+      label: "Consumption",
+      value: results.consumption,
+      color: "#a44d23",
+    },
+  ];
+}
+
 function drawCrewAssignments(assignedProducers: number): void {
   for (let i = 0; i < 6; i++) {
     ctx.fillStyle = i < assignedProducers ? "#27766b" : "#c9d2c9";
@@ -51,6 +72,20 @@ function drawCrewAssignments(assignedProducers: number): void {
     ctx.font = "16px system-ui";
     ctx.fillText(String(i + 1), 31 + i * 45, 40);
   }
+}
+
+function drawDisplayRows(rows: DisplayRow[]): void {
+  rows.forEach((row, index) => {
+    const labelY = 102 + index * 52;
+    const barY = 110 + index * 52;
+
+    ctx.fillStyle = "#233e43";
+    ctx.font = "14px system-ui";
+    ctx.fillText(`${row.label}: ${row.value}`, 18, labelY);
+
+    ctx.fillStyle = row.color;
+    ctx.fillRect(18, barY, row.value * 14, 20);
+  });
 }
 
 // Update HTML
@@ -68,13 +103,9 @@ function drawAllocationCanvas(results: ShiftResults): void {
   ctx.fillStyle = "#233e43";
   ctx.font = "14px system-ui";
   ctx.fillText(`Producers: ${results.assignedProducers} / 6`, 18, 76);
-  ctx.fillText(`Production: ${results.production}`, 18, 102);
-  ctx.fillStyle = "#27766b";
-  ctx.fillRect(18, 110, results.production * 14, 20);
-  ctx.fillStyle = "#233e43";
-  ctx.fillText(`Consumption: ${results.consumption}`, 18, 154);
-  ctx.fillStyle = "#a44d23";
-  ctx.fillRect(18, 162, results.consumption * 14, 20);
+
+  const rows = createDisplayRows(results);
+  drawDisplayRows(rows);
 }
 
 // Main update
